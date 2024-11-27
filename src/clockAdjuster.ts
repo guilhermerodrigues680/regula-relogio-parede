@@ -108,9 +108,50 @@ class CanvasClock {
     this.drawTimeText();
   }
 
-  private startFromMid(v: number, steps: number) {
-    const midAngle = Math.PI / 2;
-    return (v * (Math.PI * 2)) / steps - midAngle;
+  /**
+   * Dada uma distancia e um angulo em radianos, retorna um ponto calculado
+   * a partir do centro do relogio.
+   */
+  private pointFromCenter(dist: number, angle: number) {
+    const distX = dist * Math.cos(angle);
+    const distY = dist * Math.sin(angle);
+
+    return {
+      x: this.center.x + distX,
+      y: this.center.y + distY,
+    };
+  }
+
+  /**
+   * Retorna o angulo em radianos a partir do 12 horas.
+   */
+  private calcAngleFrom12(angle: number) {
+    const angle12 = Math.PI / 2;
+    return angle12 + angle;
+  }
+
+  /**
+   * Divide a circunferencia em `steps` partes iguais.
+   */
+  private divideCircle(steps: number) {
+    return (Math.PI * 2) / steps;
+  }
+
+  /**
+   * Calcula o angulo em radianos para um passo `step` de `steps` passos.
+   */
+  private calcStepAngle(step: number, steps: number) {
+    const partAngle = this.divideCircle(steps);
+    return partAngle * step;
+  }
+
+  /**
+   * Calcula o angulo em radianos para um passo `step` de `steps` passos
+   * a partir do 12 horas.
+   */
+  private calcStepAngleFrom12(step: number, steps: number) {
+    const angle = this.calcStepAngle(step, steps);
+    return this.calcAngleFrom12(angle);
   }
 
   private drawClockFace() {
@@ -130,12 +171,12 @@ class CanvasClock {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
-    const p = 10;
-    for (let i = 0; i < 12; i++) {
-      const angle = this.startFromMid(i, 12);
-      const x = this.center.x + (this.center.maxRadius - p) * Math.cos(angle);
-      const y = this.center.y + (this.center.maxRadius - p) * Math.sin(angle);
-      this.ctx.fillText((i || 12).toString(), x, y);
+    const pad = 10;
+    const dist = this.center.maxRadius - pad;
+    for (let i = 1; i <= 12; i++) {
+      const angle = this.calcStepAngleFrom12(i, 12);
+      const p = this.pointFromCenter(dist, angle);
+      this.ctx.fillText(i.toString(), p.x, p.y);
     }
 
     this.ctx.restore();
@@ -151,9 +192,9 @@ class CanvasClock {
     const minutes = now.getMinutes() + seconds / 60;
     const hours = now.getHours() + minutes / 60;
 
-    const hourAngle = this.startFromMid(hours % 12, 12);
-    const minuteAngle = this.startFromMid(minutes, 60);
-    const secondAngle = this.startFromMid(seconds, 60);
+    const hourAngle = this.calcStepAngleFrom12(hours % 12, 12);
+    const minuteAngle = this.calcStepAngleFrom12(minutes, 60);
+    const secondAngle = this.calcStepAngleFrom12(seconds, 60);
 
     this.drawHand(hourHandLength, hourAngle);
     this.drawHand(minuteHandLength, minuteAngle);
@@ -164,18 +205,14 @@ class CanvasClock {
     this.ctx.beginPath();
 
     if (isSecs) {
-      this.ctx.moveTo(
-        this.center.x - length * 0.25 * Math.cos(angle),
-        this.center.y - length * 0.25 * Math.sin(angle)
-      );
+      const sp = this.pointFromCenter(-length * 0.25, angle);
+      this.ctx.moveTo(sp.x, sp.y);
     } else {
       this.ctx.moveTo(this.center.x, this.center.y);
     }
 
-    this.ctx.lineTo(
-      this.center.x + length * Math.cos(angle),
-      this.center.y + length * Math.sin(angle)
-    );
+    const ep = this.pointFromCenter(length, angle);
+    this.ctx.lineTo(ep.x, ep.y);
     this.ctx.stroke();
   }
 
@@ -186,7 +223,8 @@ class CanvasClock {
 
     const now = this.timeProvider.getNow();
     const timeText = now.toLocaleTimeString();
-    this.ctx.fillText(timeText, this.center.x, this.center.y * 2 * 0.75);
+    const p = this.pointFromCenter(this.center.maxRadius * 0.75, Math.PI / 2);
+    this.ctx.fillText(timeText, p.x, p.y);
 
     this.ctx.restore();
   }
