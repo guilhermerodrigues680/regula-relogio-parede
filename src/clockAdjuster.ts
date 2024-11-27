@@ -157,12 +157,21 @@ class CanvasClock {
 
     this.drawHand(hourHandLength, hourAngle);
     this.drawHand(minuteHandLength, minuteAngle);
-    this.drawHand(secondHandLength, secondAngle);
+    this.drawHand(secondHandLength, secondAngle, true);
   }
 
-  private drawHand(length: number, angle: number) {
+  private drawHand(length: number, angle: number, isSecs: boolean = false) {
     this.ctx.beginPath();
-    this.ctx.moveTo(this.center.x, this.center.y);
+
+    if (isSecs) {
+      this.ctx.moveTo(
+        this.center.x - length * 0.25 * Math.cos(angle),
+        this.center.y - length * 0.25 * Math.sin(angle)
+      );
+    } else {
+      this.ctx.moveTo(this.center.x, this.center.y);
+    }
+
     this.ctx.lineTo(
       this.center.x + length * Math.cos(angle),
       this.center.y + length * Math.sin(angle)
@@ -190,6 +199,8 @@ export function setupClockAdjuster(element: HTMLDivElement) {
   canvasElement.classList.add(styles["canvas"]);
   element.appendChild(canvasElement);
 
-  const canvasClock = new CanvasClock(canvasElement, new AcceleratedClock());
+  const canvasClock = new CanvasClock(
+    canvasElement /*, new AcceleratedClock()*/
+  );
   canvasClock.start();
 }
