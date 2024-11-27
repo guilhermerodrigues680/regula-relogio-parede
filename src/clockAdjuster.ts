@@ -86,7 +86,7 @@ class CanvasClock {
     this.update(0);
   }
 
-  private update(time: DOMHighResTimeStamp) {
+  private update(_time: DOMHighResTimeStamp) {
     this.clear();
     this.drawClock();
     requestAnimationFrame((time) => this.update(time));
