@@ -45,6 +45,25 @@ class AcceleratedClock implements ITimeProvider {
   }
 }
 
+class CircleMath {
+  public static readonly PI = Math.PI;
+  public static readonly QUARTER_PI = Math.PI / 4;
+  public static readonly HALF_PI = Math.PI / 2;
+  public static readonly TWO_PI = 2 * Math.PI;
+  public static readonly DEG_TO_RAD = Math.PI / 180;
+  public static readonly RAD_TO_DEG = 180 / Math.PI;
+
+  private constructor() {}
+
+  public static degreesToRadians(degrees: number): number {
+    return degrees * this.DEG_TO_RAD;
+  }
+
+  public static radiansToDegrees(radians: number): number {
+    return radians * this.RAD_TO_DEG;
+  }
+}
+
 type Center = {
   x: number;
   y: number;
@@ -126,7 +145,7 @@ class CanvasClock {
    * Retorna o angulo em radianos a partir do 12 horas.
    */
   private calcAngleFrom12(angle: number) {
-    const angle12 = Math.PI / 2;
+    const angle12 = CircleMath.HALF_PI;
     return angle12 + angle;
   }
 
@@ -134,7 +153,7 @@ class CanvasClock {
    * Divide a circunferencia em `steps` partes iguais.
    */
   private divideCircle(steps: number) {
-    return (Math.PI * 2) / steps;
+    return CircleMath.TWO_PI / steps;
   }
 
   /**
@@ -161,7 +180,7 @@ class CanvasClock {
       this.center.y,
       this.center.maxRadius,
       0,
-      2 * Math.PI
+      CircleMath.TWO_PI
     );
     this.ctx.stroke();
   }
@@ -223,7 +242,10 @@ class CanvasClock {
 
     const now = this.timeProvider.getNow();
     const timeText = now.toLocaleTimeString();
-    const p = this.pointFromCenter(this.center.maxRadius * 0.75, Math.PI / 2);
+    const p = this.pointFromCenter(
+      this.center.maxRadius * 0.75,
+      CircleMath.HALF_PI
+    );
     this.ctx.fillText(timeText, p.x, p.y);
 
     this.ctx.restore();
