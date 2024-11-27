@@ -174,6 +174,7 @@ class CanvasClock {
   }
 
   private drawClockFace() {
+    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.arc(
       this.center.x,
@@ -182,13 +183,18 @@ class CanvasClock {
       0,
       CircleMath.TWO_PI
     );
+
+    this.ctx.strokeStyle = "white";
+    this.ctx.fillStyle = this.ctx.strokeStyle;
     this.ctx.stroke();
+    this.ctx.restore();
   }
 
   private drawClockNumbers() {
     this.ctx.save();
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
+    this.ctx.fillStyle = "white";
 
     const pad = 10;
     const dist = this.center.maxRadius - pad;
@@ -221,6 +227,7 @@ class CanvasClock {
   }
 
   private drawHand(length: number, angle: number, isSecs: boolean = false) {
+    this.ctx.save();
     this.ctx.beginPath();
 
     if (isSecs) {
@@ -232,13 +239,26 @@ class CanvasClock {
 
     const ep = this.pointFromCenter(length, angle);
     this.ctx.lineTo(ep.x, ep.y);
+
+    if (isSecs) {
+      const radius = 10;
+      this.ctx.moveTo(this.center.x + radius, this.center.y);
+      this.ctx.arc(this.center.x, this.center.y, radius, 0, CircleMath.TWO_PI);
+    }
+
+    this.ctx.lineWidth = isSecs ? 2 : 4;
+    this.ctx.strokeStyle = isSecs ? "red" : "white";
+    this.ctx.fillStyle = this.ctx.strokeStyle;
     this.ctx.stroke();
+    this.ctx.fill();
+    this.ctx.restore();
   }
 
   public drawTimeText() {
     this.ctx.save();
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
+    this.ctx.fillStyle = "white";
 
     const now = this.timeProvider.getNow();
     const timeText = now.toLocaleTimeString();
