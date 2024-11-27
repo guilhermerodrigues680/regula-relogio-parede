@@ -1,5 +1,50 @@
 import styles from "./clockAdjuster.module.css";
 
+interface ITimeProvider {
+  getNow(): Date;
+}
+
+class SystemClock implements ITimeProvider {
+  private static readonly instance = new SystemClock();
+
+  private constructor() {}
+
+  public static getInstance() {
+    return this.instance;
+  }
+
+  public getNow(): Date {
+    return new Date();
+  }
+}
+
+class AcceleratedClock implements ITimeProvider {
+  private readonly next: Date;
+  private readonly factor: number;
+  private lastCall: Date;
+
+  public constructor(
+    startDate: Date | null = null,
+    factor: number | null = null
+  ) {
+    this.next = startDate ?? new Date();
+    this.factor = factor ?? 100;
+    this.lastCall = new Date();
+  }
+
+  public getNow(): Date {
+    const d = new Date(this.next);
+
+    const now = new Date();
+    const ellapsed = now.getTime() - this.lastCall.getTime();
+
+    this.next.setTime(this.next.getTime() + ellapsed * this.factor);
+    this.lastCall = now;
+
+    return d;
+  }
+}
+
 type Center = {
   x: number;
   y: number;
@@ -10,8 +55,12 @@ class CanvasClock {
   private readonly canvasElement: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly center: Center;
+  private readonly timeProvider: ITimeProvider;
 
-  public constructor(canvasElement: HTMLCanvasElement) {
+  public constructor(
+    canvasElement: HTMLCanvasElement,
+    timeProvider: ITimeProvider | null = null
+  ) {
     const ctx = canvasElement.getContext("2d");
     if (!ctx) {
       throw new Error("Falha ao obter contexto 2D do canvas");
@@ -29,6 +78,8 @@ class CanvasClock {
         return Math.min(this.x, this.y) - padding;
       },
     };
+
+    this.timeProvider = timeProvider ?? SystemClock.getInstance();
   }
 
   public start() {
@@ -95,7 +146,7 @@ class CanvasClock {
     const minuteHandLength = this.center.maxRadius * 0.7;
     const secondHandLength = this.center.maxRadius * 0.9;
 
-    const now = new Date();
+    const now = this.timeProvider.getNow();
     const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
     const minutes = now.getMinutes() + seconds / 60;
     const hours = now.getHours() + minutes / 60;
@@ -124,7 +175,8 @@ class CanvasClock {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
-    const timeText = new Date().toLocaleTimeString();
+    const now = this.timeProvider.getNow();
+    const timeText = now.toLocaleTimeString();
     this.ctx.fillText(timeText, this.center.x, this.center.y * 2 * 0.75);
 
     this.ctx.restore();
@@ -138,6 +190,6 @@ export function setupClockAdjuster(element: HTMLDivElement) {
   canvasElement.classList.add(styles["canvas"]);
   element.appendChild(canvasElement);
 
-  const canvasClock = new CanvasClock(canvasElement);
+  const canvasClock = new CanvasClock(canvasElement, new AcceleratedClock());
   canvasClock.start();
 }
