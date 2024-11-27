@@ -145,7 +145,7 @@ class CanvasClock {
    * Retorna o angulo em radianos a partir do 12 horas.
    */
   private calcAngleFrom12(angle: number) {
-    const angle12 = CircleMath.HALF_PI;
+    const angle12 = (3 / 2) * CircleMath.PI;
     return angle12 + angle;
   }
 
