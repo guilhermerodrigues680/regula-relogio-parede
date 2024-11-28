@@ -14,10 +14,21 @@ export class CanvasCamera {
 
   // The various HTML elements we need to configure or control. These
   // will be set by the startup() function.
-  public constructor(
-    private readonly video: HTMLVideoElement,
-    private readonly canvas: HTMLCanvasElement
-  ) {}
+  private readonly video: HTMLVideoElement;
+  private readonly canvas: HTMLCanvasElement;
+
+  private readonly ctx: CanvasRenderingContext2D;
+
+  public constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Falha ao obter contexto 2D do canvas");
+    }
+
+    this.video = video;
+    this.canvas = canvas;
+    this.ctx = ctx;
+  }
 
   public async startup() {
     console.debug(this);
@@ -56,11 +67,23 @@ export class CanvasCamera {
         audio: false,
       });
 
+      // this.video.style.opacity = "0";
       this.video.srcObject = stream;
       this.video.play();
+      this.update(0);
     } catch (err) {
       console.error(`An error occurred: ${err}`, { err });
       throw new Error(`An error occurred: ${err}`);
     }
+  }
+
+  private update(_time: DOMHighResTimeStamp) {
+    // this.clear();
+    this.drawVideo();
+    requestAnimationFrame((time) => this.update(time));
+  }
+
+  private drawVideo() {
+    this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
   }
 }
