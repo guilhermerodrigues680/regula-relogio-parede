@@ -1,5 +1,8 @@
 import styles from "./clockAdjuster.module.css";
 
+// XXX: Organizar em arquivos separados / modulos
+// https://levelup.gitconnected.com/dynamically-resizing-the-html5-canvas-with-vanilla-javascript-c64588a0b798
+
 export interface ITimeProvider {
   getNow(): Date;
 }

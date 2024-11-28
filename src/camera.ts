@@ -1,7 +1,12 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Media_Capture_and_Streams_API/Taking_still_photos
 // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas
+// https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback
+
+import type { ILogger } from "./logger";
 
 export class CanvasCamera {
+  private readonly logger: ILogger;
+
   // The width and height of the captured photo. We will set the
   // width to the value defined here, but the height will be
   // calculated based on the aspect ratio of the input stream.
@@ -19,12 +24,17 @@ export class CanvasCamera {
 
   private readonly ctx: CanvasRenderingContext2D;
 
-  public constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
+  public constructor(
+    logger: ILogger,
+    video: HTMLVideoElement,
+    canvas: HTMLCanvasElement
+  ) {
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       throw new Error("Falha ao obter contexto 2D do canvas");
     }
 
+    this.logger = logger;
     this.video = video;
     this.canvas = canvas;
     this.ctx = ctx;
@@ -32,30 +42,49 @@ export class CanvasCamera {
 
   public async startup() {
     console.debug(this);
+    const stream = await this.getStream();
 
-    this.video.addEventListener(
-      "canplay",
-      (_ev) => {
-        if (!this.streaming) {
-          this.height =
-            this.video.videoHeight / (this.video.videoWidth / this.width);
+    return new Promise<void>((resolve, reject) => {
+      this.video.addEventListener(
+        "canplay",
+        (_ev) => {
+          this.logger.log("Video canplay");
 
-          // Firefox currently has a bug where the height can't be read from
-          // the video, so we will make assumptions if this happens.
-          if (isNaN(this.height)) {
-            this.height = this.width / (4 / 3);
+          if (!this.streaming) {
+            this.height =
+              this.video.videoHeight / (this.video.videoWidth / this.width);
+
+            // Firefox currently has a bug where the height can't be read from
+            // the video, so we will make assumptions if this happens.
+            if (isNaN(this.height)) {
+              this.height = this.width / (4 / 3);
+            }
+
+            this.video.setAttribute("width", this.width.toString());
+            this.video.setAttribute("height", this.height.toString());
+            this.canvas.setAttribute("width", this.width.toString());
+            this.canvas.setAttribute("height", this.height.toString());
+            this.streaming = true;
           }
+        },
+        false
+      );
 
-          this.video.setAttribute("width", this.width.toString());
-          this.video.setAttribute("height", this.height.toString());
-          this.canvas.setAttribute("width", this.width.toString());
-          this.canvas.setAttribute("height", this.height.toString());
-          this.streaming = true;
-        }
-      },
-      false
-    );
+      this.video.addEventListener("playing", () => {
+        this.logger.log("Video playing");
+        resolve();
+      });
 
+      this.video.addEventListener("error", (ev) => {
+        this.logger.log(`Error: ${ev}`);
+        reject(new Error(`Error: ${ev}`));
+      });
+
+      this.video.srcObject = stream;
+    });
+  }
+
+  private async getStream(): Promise<MediaStream> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         // video: true,
@@ -68,9 +97,10 @@ export class CanvasCamera {
       });
 
       // this.video.style.opacity = "0";
-      this.video.srcObject = stream;
-      this.video.play();
+
+      // this.video.play();
       // this.update(0);
+      return stream;
     } catch (err) {
       console.error(`An error occurred: ${err}`, { err });
       throw new Error(`An error occurred: ${err}`);
