@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Certificado SSL
+local-cert/*
+!local-cert/README.md
+
 # Editor directories and files
 # .vscode/*
 # !.vscode/extensions.json
