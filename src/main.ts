@@ -10,8 +10,6 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 (async () => {
   const canvasCamera = new CanvasCamera(video, canvas);
   await canvasCamera.startup();
-  await new Promise<void>((resolve, reject) => {
-    setTimeout(resolve, 2500);
-  });
+  await new Promise<void>((resolve) => setTimeout(resolve, 2500));
   setupClockAdjuster(canvas);
 })();

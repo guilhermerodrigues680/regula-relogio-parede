@@ -1,10 +1,10 @@
 import styles from "./clockAdjuster.module.css";
 
-interface ITimeProvider {
+export interface ITimeProvider {
   getNow(): Date;
 }
 
-class SystemClock implements ITimeProvider {
+export class SystemClock implements ITimeProvider {
   private static readonly instance = new SystemClock();
 
   private constructor() {}
@@ -18,7 +18,7 @@ class SystemClock implements ITimeProvider {
   }
 }
 
-class AcceleratedClock implements ITimeProvider {
+export class AcceleratedClock implements ITimeProvider {
   private readonly next: Date;
   private readonly factor: number;
   private lastCall: Date;
@@ -275,7 +275,7 @@ class CanvasClock {
 export function setupClockAdjuster(canvasElement: HTMLCanvasElement) {
   // canvasElement.width = 400;
   // canvasElement.height = 400;
-  // canvasElement.classList.add(styles["canvas"]);
+  canvasElement.classList.add(styles["canvas"]);
 
   const canvasClock = new CanvasClock(
     canvasElement /*, new AcceleratedClock()*/
