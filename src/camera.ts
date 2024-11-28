@@ -70,7 +70,7 @@ export class CanvasCamera {
       // this.video.style.opacity = "0";
       this.video.srcObject = stream;
       this.video.play();
-      this.update(0);
+      // this.update(0);
     } catch (err) {
       console.error(`An error occurred: ${err}`, { err });
       throw new Error(`An error occurred: ${err}`);

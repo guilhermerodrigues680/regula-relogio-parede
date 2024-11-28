@@ -246,7 +246,7 @@ class CanvasClock {
       this.ctx.arc(this.center.x, this.center.y, radius, 0, CircleMath.TWO_PI);
     }
 
-    this.ctx.lineWidth = isSecs ? 2 : 4;
+    this.ctx.lineWidth = isSecs ? 1 : 2;
     this.ctx.strokeStyle = isSecs ? "red" : "white";
     this.ctx.fillStyle = this.ctx.strokeStyle;
     this.ctx.stroke();
@@ -272,12 +272,10 @@ class CanvasClock {
   }
 }
 
-export function setupClockAdjuster(element: HTMLDivElement) {
-  const canvasElement = document.createElement("canvas");
-  canvasElement.width = 400;
-  canvasElement.height = 400;
-  canvasElement.classList.add(styles["canvas"]);
-  element.appendChild(canvasElement);
+export function setupClockAdjuster(canvasElement: HTMLCanvasElement) {
+  // canvasElement.width = 400;
+  // canvasElement.height = 400;
+  // canvasElement.classList.add(styles["canvas"]);
 
   const canvasClock = new CanvasClock(
     canvasElement /*, new AcceleratedClock()*/
