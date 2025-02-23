@@ -20,7 +20,7 @@ export class CanvasCamera {
   // The various HTML elements we need to configure or control. These
   // will be set by the startup() function.
   private readonly video: HTMLVideoElement;
-  private readonly canvas: HTMLCanvasElement;
+  // private readonly canvas: HTMLCanvasElement;
 
   private readonly ctx: CanvasRenderingContext2D;
 
@@ -36,7 +36,7 @@ export class CanvasCamera {
 
     this.logger = logger;
     this.video = video;
-    this.canvas = canvas;
+    // this.canvas = canvas;
     this.ctx = ctx;
   }
 
