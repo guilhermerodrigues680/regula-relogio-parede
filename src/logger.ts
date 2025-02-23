@@ -8,6 +8,7 @@ export class ElementLogger implements ILogger {
   log(message: string) {
     const dtText = new Date().toLocaleTimeString();
     const m = `${dtText} [LOG] ${message}`;
+    console.log(m);
     const data = m + "\n";
     this.elem.textContent += data;
   }

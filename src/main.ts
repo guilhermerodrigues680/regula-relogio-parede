@@ -17,7 +17,7 @@ logger.log(`Device pixel ratio: ${window.devicePixelRatio}`);
 (async () => {
   const canvasCamera = new CanvasCamera(logger, video, canvas);
   await canvasCamera.startup();
-  setupClockAdjuster(canvas);
+  setupClockAdjuster(logger, canvas);
 })()
   .then(() => console.debug("App started"))
   .catch((err) => console.error("Error starting app", err));

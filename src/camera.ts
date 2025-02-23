@@ -51,19 +51,19 @@ export class CanvasCamera {
           this.logger.log("Video canplay");
 
           if (!this.streaming) {
-            this.height =
-              this.video.videoHeight / (this.video.videoWidth / this.width);
+            // this.height =
+            //   this.video.videoHeight / (this.video.videoWidth / this.width);
 
-            // Firefox currently has a bug where the height can't be read from
-            // the video, so we will make assumptions if this happens.
-            if (isNaN(this.height)) {
-              this.height = this.width / (4 / 3);
-            }
+            // // Firefox currently has a bug where the height can't be read from
+            // // the video, so we will make assumptions if this happens.
+            // if (isNaN(this.height)) {
+            //   this.height = this.width / (4 / 3);
+            // }
 
-            this.video.setAttribute("width", this.width.toString());
-            this.video.setAttribute("height", this.height.toString());
-            this.canvas.setAttribute("width", this.width.toString());
-            this.canvas.setAttribute("height", this.height.toString());
+            // this.video.setAttribute("width", this.width.toString());
+            // this.video.setAttribute("height", this.height.toString());
+            // this.canvas.setAttribute("width", this.width.toString());
+            // this.canvas.setAttribute("height", this.height.toString());
             this.streaming = true;
           }
         },

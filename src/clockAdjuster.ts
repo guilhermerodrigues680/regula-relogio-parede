@@ -1,5 +1,7 @@
 import styles from "./clockAdjuster.module.css";
 
+import type { ILogger } from "./logger";
+
 // XXX: Organizar em arquivos separados / modulos
 // https://levelup.gitconnected.com/dynamically-resizing-the-html5-canvas-with-vanilla-javascript-c64588a0b798
 
@@ -74,24 +76,48 @@ type Center = {
 };
 
 class CanvasClock {
+  private readonly logger: ILogger;
   private readonly canvasElement: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
+  private readonly scale: number;
   private readonly center: Center;
   private readonly timeProvider: ITimeProvider;
 
   public constructor(
+    logger: ILogger,
     canvasElement: HTMLCanvasElement,
     timeProvider: ITimeProvider | null = null
   ) {
+    this.logger = logger;
+
     const ctx = canvasElement.getContext("2d");
     if (!ctx) {
       throw new Error("Falha ao obter contexto 2D do canvas");
     }
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio
+    // Set actual size in memory (scaled to account for extra pixel density).
+    // Change to 1 on retina screens to see blurry canvas.
+    const devicePixelRatio = window.devicePixelRatio;
+    const originalSize = 300;
+
+    console.debug("canvasElement.width", canvasElement.getBoundingClientRect());
+
+    const minSize = Math.min(
+      canvasElement.offsetWidth,
+      canvasElement.offsetHeight
+    );
+    const scale = (minSize / originalSize) * devicePixelRatio;
+    this.logger.log(`Canvas scale: ${scale}`);
+
+    canvasElement.width = Math.floor(canvasElement.offsetWidth * scale);
+    canvasElement.height = Math.floor(canvasElement.offsetHeight * scale);
+
     const padding = 0;
 
     this.canvasElement = canvasElement;
     this.ctx = ctx;
+    this.scale = scale;
     this.center = {
       x: (canvasElement.width - padding) / 2,
       y: (canvasElement.height - padding) / 2,
@@ -112,6 +138,14 @@ class CanvasClock {
     this.clear();
     this.drawClock();
     requestAnimationFrame((time) => this.update(time));
+  }
+
+  private scaleNumber(n: number) {
+    return n * this.scale;
+  }
+
+  private scaleFontSize(fontSize: number) {
+    return this.scaleNumber(fontSize);
   }
 
   private clear() {
@@ -195,11 +229,15 @@ class CanvasClock {
 
   private drawClockNumbers() {
     this.ctx.save();
+    const originalFontSize = 40;
+    const fontSize = this.scaleFontSize(originalFontSize);
+    this.ctx.font = `${fontSize}px sans-serif`;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillStyle = "white";
 
-    const pad = 10;
+    const originalPad = 24;
+    const pad = this.scaleNumber(originalPad);
     const dist = this.center.maxRadius - pad;
     for (let i = 1; i <= 12; i++) {
       const angle = this.calcStepAngleFrom12(i, 12);
@@ -244,12 +282,14 @@ class CanvasClock {
     this.ctx.lineTo(ep.x, ep.y);
 
     if (isSecs) {
-      const radius = 10;
+      const originalRadius = 10;
+      const radius = this.scaleNumber(originalRadius);
       this.ctx.moveTo(this.center.x + radius, this.center.y);
       this.ctx.arc(this.center.x, this.center.y, radius, 0, CircleMath.TWO_PI);
     }
 
-    this.ctx.lineWidth = isSecs ? 1 : 2;
+    const originalLineWidth = isSecs ? 1 : 2;
+    this.ctx.lineWidth = this.scaleNumber(originalLineWidth);
     this.ctx.strokeStyle = isSecs ? "red" : "white";
     this.ctx.fillStyle = this.ctx.strokeStyle;
     this.ctx.stroke();
@@ -259,6 +299,9 @@ class CanvasClock {
 
   public drawTimeText() {
     this.ctx.save();
+    const originalFontSize = 14;
+    const fontSize = this.scaleFontSize(originalFontSize);
+    this.ctx.font = `bold ${fontSize}px sans-serif`;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillStyle = "white";
@@ -266,7 +309,7 @@ class CanvasClock {
     const now = this.timeProvider.getNow();
     const timeText = now.toLocaleTimeString();
     const p = this.pointFromCenter(
-      this.center.maxRadius * 0.75,
+      this.center.maxRadius * 0.5,
       CircleMath.HALF_PI
     );
     this.ctx.fillText(timeText, p.x, p.y);
@@ -275,12 +318,16 @@ class CanvasClock {
   }
 }
 
-export function setupClockAdjuster(canvasElement: HTMLCanvasElement) {
+export function setupClockAdjuster(
+  logger: ILogger,
+  canvasElement: HTMLCanvasElement
+) {
   // canvasElement.width = 400;
   // canvasElement.height = 400;
   canvasElement.classList.add(styles["canvas"]);
 
   const canvasClock = new CanvasClock(
+    logger,
     canvasElement /*, new AcceleratedClock()*/
   );
   canvasClock.start();
